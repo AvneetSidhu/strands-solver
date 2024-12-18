@@ -13,7 +13,7 @@ class TrieNode():
             cur = cur.children[letter]
         cur.end = True
 
-with open('filtered.txt', 'r') as filtered:
+with open('enable.txt', 'r') as filtered:
     words = filtered.readlines()
     words_strip = [word.strip() for word in words]
 
