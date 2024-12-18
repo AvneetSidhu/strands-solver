@@ -40,7 +40,7 @@ def span_left_to_right(path):
             start = True
         if (i, 5) in path:
             end = True
-    return start and end
+    return (start and end)
 
 def span_top_to_bottom(path):
     start = False
@@ -66,7 +66,12 @@ def dfs(r, c, node, word, board):
             span.add(word)
         else:
             res.add(word)
-        answers[word] = path.copy()
+
+        if word not in answers:
+            answers[word] = path.copy()
+        elif span_left_to_right(path) or span_top_to_bottom(path):
+            answers[word] = path.copy()
+
     dfs(r - 1, c, node, word, board)  # Up
     dfs(r + 1, c, node, word, board)  # Down
     dfs(r, c + 1, node, word, board)  # Right
@@ -155,10 +160,10 @@ def move_focus_by_arrow(event, row, col):
         grid[next_row][next_col].focus_set()
 
 def populate_listbox():
-    for solution in sorted(list(span), key = len):
+    for solution in sorted(list(span), key = len)[::-1]:
         listbox.insert(tk.END, solution + " SPAN")
     
-    for solution in sorted(list(res), key = len):
+    for solution in sorted(list(res), key = len)[::-1]:
         listbox.insert(tk.END, solution)
 
 def handle_selection(event):
