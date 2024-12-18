@@ -28,8 +28,9 @@ with open("trie.pkl", "rb") as f:
 #          "NNISPR", 
 #          "ITYOPU"]
 
-pathU = set()
-resU = set()
+path = set()
+res = set()
+span = set()
 
 def span_left_to_right(path):
     start = False
@@ -54,32 +55,32 @@ def span_top_to_bottom(path):
 
 answers = {}
 
-def dfsU(r, c, node, word, board): 
-    if (r < 0 or r == len(board) or c < 0 or c == len(board[0]) or (r,c) in pathU or board[r][c].lower() not in node.children):
+def dfs(r, c, node, word, board): 
+    if (r < 0 or r == len(board) or c < 0 or c == len(board[0]) or (r,c) in path or board[r][c].lower() not in node.children):
         return
-    pathU.add((r,c))
+    path.add((r,c))
     word += board[r][c].lower()
     node = node.children[board[r][c].lower()]
-    if node.end and (span_left_to_right(pathU) or span_top_to_bottom(pathU)):
-        resU.add(word)
-        answers[word] = pathU.copy()
-    dfsU(r - 1, c, node, word, board)  # Up
-    dfsU(r + 1, c, node, word, board)  # Down
-    dfsU(r, c + 1, node, word, board)  # Right
-    dfsU(r, c - 1, node, word, board)  # Left
-    dfsU(r - 1, c - 1, node, word, board)  # Top-left diagonal
-    dfsU(r - 1, c + 1, node, word, board)  # Top-right diagonal
-    dfsU(r + 1, c - 1, node, word, board)  # Bottom-left diagonal
-    dfsU(r + 1, c + 1, node, word, board)  # Bottom-right diagonal
-    pathU.remove((r,c))
+    if node.end:
+        if(span_left_to_right(path) or span_top_to_bottom(path)):
+            span.add(word)
+        else:
+            res.add(word)
+        answers[word] = path.copy()
+    dfs(r - 1, c, node, word, board)  # Up
+    dfs(r + 1, c, node, word, board)  # Down
+    dfs(r, c + 1, node, word, board)  # Right
+    dfs(r, c - 1, node, word, board)  # Left
+    dfs(r - 1, c - 1, node, word, board)  # Top-left diagonal
+    dfs(r - 1, c + 1, node, word, board)  # Top-right diagonal
+    dfs(r + 1, c - 1, node, word, board)  # Bottom-left diagonal
+    dfs(r + 1, c + 1, node, word, board)  # Bottom-right diagonal
+    path.remove((r,c))
 
 ROWS = 8 
 COLS = 6
 
 grid = [[None for _ in range(COLS)] for _ in range(ROWS)]
-
-main = tk.Tk()
-main.title("Strands Solver")
 
 def solve():
     board = []
@@ -95,8 +96,9 @@ def solve():
     
     for i in range(len(board)):
         for j in range(len(board[0])):
-            dfsU(i,j,loaded_trie,"", board)
-    populate_listbox(answers)
+            dfs(i,j,loaded_trie,"", board)
+
+    populate_listbox()
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
@@ -152,14 +154,18 @@ def move_focus_by_arrow(event, row, col):
     if 0 <= next_row < ROWS and 0 <= next_col < COLS:
         grid[next_row][next_col].focus_set()
 
-def populate_listbox(answers):
-    for solution in answers.keys():
+def populate_listbox():
+    for solution in sorted(list(span), key = len):
+        listbox.insert(tk.END, solution + " SPAN")
+    
+    for solution in sorted(list(res), key = len):
         listbox.insert(tk.END, solution)
 
 def handle_selection(event):
     selected_index = listbox.curselection()
     if selected_index:
         selected_solution = listbox.get(selected_index)
+        selected_solution = selected_solution.split(" ")[0]
         print(f"Selected solution: {selected_solution}")
         color_solution(selected_solution)
 
@@ -172,21 +178,22 @@ def color_solution(word):
         grid[coordinate[0]][coordinate[1]].config(bg="green")
 
 
+main = tk.Tk()
+main.title("Strands Solver")
+
 tk.Label(main, text="Enter board")
 create_board()
 
-solve = tk.Button(main, text = 'Solve', command = solve, font= ("Arial", 14))
-solve.grid(row=ROWS, column = 0, columnspan = COLS, pady = 10)
+solve1 = tk.Button(main, text='Words', command=solve, font=("Arial", 14))
+solve1.grid(row=ROWS, column=0, columnspan = COLS, pady=10)    
 
 listbox = tk.Listbox(main, height=15, width=20)
 listbox.grid(row=0, column=COLS + 1, rowspan=ROWS, padx=10, pady=5, sticky="n")
 
-# Add a Scrollbar to the Listbox
 scrollbar = tk.Scrollbar(main, orient=tk.VERTICAL, command=listbox.yview)
 scrollbar.grid(row=0, column=COLS + 2, rowspan=ROWS, sticky="ns")
 listbox.config(yscrollcommand=scrollbar.set)
 
-# Bind the Listbox selection to the handle_selection function
-listbox.bind("<<ListboxSelect>>", handle_selection)
 
+listbox.bind("<<ListboxSelect>>", handle_selection)
 main.mainloop()
