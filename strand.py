@@ -53,15 +53,23 @@ def span_top_to_bottom(path):
             end = True
     return start and end
 
+def compound_words():
+    for word in starts:
+        print(word, starts[word], ends[word])
+
+starts = {}
+ends = {}
 answers = {}
 
-def dfs(r, c, node, word, board): 
+def dfs(r, c, node, word, board, start): 
     if (r < 0 or r == len(board) or c < 0 or c == len(board[0]) or (r,c) in path or board[r][c].lower() not in node.children):
         return
     path.add((r,c))
     word += board[r][c].lower()
     node = node.children[board[r][c].lower()]
     if node.end:
+        ends[word] = (r,c)
+        starts[word] = start
         if(span_left_to_right(path) or span_top_to_bottom(path)):
             span.add(word)
         else:
@@ -72,14 +80,14 @@ def dfs(r, c, node, word, board):
         elif span_left_to_right(path) or span_top_to_bottom(path):
             answers[word] = path.copy()
 
-    dfs(r - 1, c, node, word, board)  # Up
-    dfs(r + 1, c, node, word, board)  # Down
-    dfs(r, c + 1, node, word, board)  # Right
-    dfs(r, c - 1, node, word, board)  # Left
-    dfs(r - 1, c - 1, node, word, board)  # Top-left diagonal
-    dfs(r - 1, c + 1, node, word, board)  # Top-right diagonal
-    dfs(r + 1, c - 1, node, word, board)  # Bottom-left diagonal
-    dfs(r + 1, c + 1, node, word, board)  # Bottom-right diagonal
+    dfs(r - 1, c, node, word, board, start)  # Up
+    dfs(r + 1, c, node, word, board, start)  # Down
+    dfs(r, c + 1, node, word, board, start)  # Right
+    dfs(r, c - 1, node, word, board, start)  # Left
+    dfs(r - 1, c - 1, node, word, board, start)  # Top-left diagonal
+    dfs(r - 1, c + 1, node, word, board, start)  # Top-right diagonal
+    dfs(r + 1, c - 1, node, word, board, start)  # Bottom-left diagonal
+    dfs(r + 1, c + 1, node, word, board, start)  # Bottom-right diagonal
     path.remove((r,c))
 
 ROWS = 8 
@@ -101,9 +109,11 @@ def solve():
     
     for i in range(len(board)):
         for j in range(len(board[0])):
-            dfs(i,j,loaded_trie,"", board)
+            start = (i, j)
+            dfs(i,j,loaded_trie,"", board, start)
 
     populate_listbox()
+    compound_words()
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
