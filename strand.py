@@ -56,7 +56,15 @@ def span_top_to_bottom(path):
             end = True
     return start and end
 
-def dfs(r, c, node, word, board, start): 
+def valid_moves(r,c,path):
+    moves = [(1,0),(1,1),(0,1),(-1,0),(-1,1),(1,-1),(-1,-1),(0,-1)]
+    valid = []
+    for (x,y) in moves:
+        if 0 <= r + x < ROWS and 0 <= c + y < COLS and (r + x, c + y) not in path:
+            valid.append((r + x, c + y))
+    return valid
+
+def dfs(r, c, node, word, board, start, first_word_found = False): 
     if (r < 0 or r == len(board) or c < 0 or c == len(board[0]) or (r,c) in path or board[r][c].lower() not in node.children):
         return
     path.add((r,c))
@@ -65,6 +73,11 @@ def dfs(r, c, node, word, board, start):
     if node.end:
         ends[word] = (r,c)
         starts[word] = start
+        if not first_word_found:
+            first_word_found = True
+            new_search_positions = valid_moves(r, c, path)
+            for (x, y) in new_search_positions:
+                dfs(x,y, loaded_trie, word, board, start, first_word_found)
         if(span_left_to_right(path) or span_top_to_bottom(path)):
             span.add(word)
         else:
@@ -75,14 +88,14 @@ def dfs(r, c, node, word, board, start):
         elif span_left_to_right(path) or span_top_to_bottom(path):
             answers[word] = path.copy()
 
-    dfs(r - 1, c, node, word, board, start)  # Up
-    dfs(r + 1, c, node, word, board, start)  # Down
-    dfs(r, c + 1, node, word, board, start)  # Right
-    dfs(r, c - 1, node, word, board, start)  # Left
-    dfs(r - 1, c - 1, node, word, board, start)  # Top-left diagonal
-    dfs(r - 1, c + 1, node, word, board, start)  # Top-right diagonal
-    dfs(r + 1, c - 1, node, word, board, start)  # Bottom-left diagonal
-    dfs(r + 1, c + 1, node, word, board, start)  # Bottom-right diagonal
+    dfs(r - 1, c, node, word, board, start, first_word_found)  # Up
+    dfs(r + 1, c, node, word, board, start,first_word_found)  # Down
+    dfs(r, c + 1, node, word, board, start,first_word_found)  # Right
+    dfs(r, c - 1, node, word, board, start,first_word_found)  # Left
+    dfs(r - 1, c - 1, node, word, board, start,first_word_found)  # Top-left diagonal
+    dfs(r - 1, c + 1, node, word, board, start,first_word_found)  # Top-right diagonal
+    dfs(r + 1, c - 1, node, word, board, start,first_word_found)  # Bottom-left diagonal
+    dfs(r + 1, c + 1, node, word, board, start,first_word_found)  # Bottom-right diagonal
     path.remove((r,c))
 
 ROWS = 8 
@@ -165,11 +178,11 @@ def move_focus_by_arrow(event, row, col):
         grid[next_row][next_col].focus_set()
 
 def populate_listbox():
-    for solution in sorted(list(span), key = len)[::-1]:
+    for solution in sorted(list(span))[::-1]:
         listbox.insert(tk.END, solution + " SPAN")
     
-    for solution in sorted(list(res), key = len)[::-1]:
-        listbox.insert(tk.END, solution)
+    # for solution in sorted(list(res), key = len)[::-1]:
+    #     listbox.insert(tk.END, solution)
 
 def handle_selection(event):
     selected_index = listbox.curselection()
