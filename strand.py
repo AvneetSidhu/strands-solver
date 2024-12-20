@@ -119,9 +119,11 @@ def solve():
         for j in range(len(board[0])):
             start = (i, j)
             dfs(i,j,loaded_trie,"", board, start)
-    # compound_words()
     populate_listbox()
-    
+
+
+def find_solution_combinations():
+    return
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
@@ -177,12 +179,12 @@ def move_focus_by_arrow(event, row, col):
     if 0 <= next_row < ROWS and 0 <= next_col < COLS:
         grid[next_row][next_col].focus_set()
 
+def intersection(setA, setB):
+    return setA.intersection(setB)
+
 def populate_listbox():
     for solution in sorted(list(span))[::-1]:
         listbox.insert(tk.END, solution + " SPAN")
-    
-    # for solution in sorted(list(res), key = len)[::-1]:
-    #     listbox.insert(tk.END, solution)
 
 def handle_selection(event):
     selected_index = listbox.curselection()
