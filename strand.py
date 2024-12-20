@@ -56,49 +56,6 @@ def span_top_to_bottom(path):
             end = True
     return start and end
 
-def possible_moves(r, c):
-
-    directions = [
-        (-1, 0),    # Up
-        (1, 0),     # Down
-        (0, -1),    # Left
-        (0, 1),     # Right
-        (-1, -1),   # Up-Left Diagonal
-        (-1, 1),    # Up-Right Diagonal
-        (1, -1),    # Down-Left Diagonal
-        (1, 1)      
-    ]
-
-    valid_moves = set()
-    for dr, dc in directions:
-        new_r, new_c = r + dr, c + dc
-        if 0 <= new_r < ROWS and 0 <= new_c < COLS:
-            valid_moves.add((new_r, new_c))
-
-    return valid_moves
-    
-
-def are_compoundable(wordA, wordB):
-    if wordA == wordB:
-        return False
-    possible_starts = possible_moves(ends[wordA][0], ends[wordA][1])
-    wordBPath = answers[wordB]
-    if starts[wordB] in possible_starts:
-        for coordinate in answers[wordA]:
-            if coordinate in wordBPath:
-                return False
-        return True
-    else:
-        return False
-    
-def compound_words():
-    for wordA in starts: #loop over all words
-        for wordB in starts:
-            if are_compoundable(wordA, wordB) and (span_left_to_right(answers[wordA] | answers[wordB]) or span_top_to_bottom(answers[wordA] | answers[wordB])):
-                span.add(wordA + wordB) 
-                answers[wordA + wordB] = answers[wordA] | answers[wordB]
-
-
 def dfs(r, c, node, word, board, start): 
     if (r < 0 or r == len(board) or c < 0 or c == len(board[0]) or (r,c) in path or board[r][c].lower() not in node.children):
         return
