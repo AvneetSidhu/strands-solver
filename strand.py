@@ -71,17 +71,26 @@ def dfs(r, c, node, word, board, start, first_word_found = False):
     word += board[r][c].lower()
     node = node.children[board[r][c].lower()]
     if node.end:
+
         ends[word] = (r,c)
         starts[word] = start
+
         if not first_word_found:
+
             first_word_found = True
+
             new_search_positions = valid_moves(r, c, path)
+
             for (x, y) in new_search_positions:
                 dfs(x,y, loaded_trie, word, board, start, first_word_found)
+            
+            first_word_found = False
+            
         if(span_left_to_right(path) or span_top_to_bottom(path)):
             span.add(word)
         else:
-            res.add(word)
+            if not first_word_found:
+                res.add(word)
 
         if word not in answers:
             answers[word] = path.copy()
@@ -119,11 +128,43 @@ def solve():
         for j in range(len(board[0])):
             start = (i, j)
             dfs(i,j,loaded_trie,"", board, start)
+    print(res)
     populate_listbox()
+    # find_solution_combinations(res, answers, span)
 
+def intersection(setA, setB):
+    return setA.intersection(setB)
 
-def find_solution_combinations():
-    return
+boardSolutions = []
+
+def boardSolver(usedSpaces, index, currentSolution, res, answers):
+    if len(currentSolution) == 48:
+        boardSolutions.append(currentSolution.copy())
+        return
+    
+    res_list = list(res)  # Convert res to a list once before the loop
+    for i in range(index + 1, len(res_list)):
+        word = res_list[i]
+        if not usedSpaces & answers[word] and len(usedSpaces) + len(answers[word]) <= 48:  # Efficient intersection check
+            # Choose
+            new_usedSpaces = usedSpaces | answers[word]
+            currentSolution.append(word)
+            
+            # Explore
+            boardSolver(new_usedSpaces, i, currentSolution, res, answers)
+            
+            # Undo (backtrack)
+            currentSolution.pop()
+
+def find_solution_combinations(res, answers, span):
+    solutions = {}
+    for spangram in span:
+        originalLength = len(boardSolutions)
+        boardSolver(answers[spangram], 0, [], res, answers)
+        if len(boardSolutions) != originalLength:
+            solutions[spangram] = boardSolutions[-1]
+    print(res)
+    print(solutions)
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
@@ -179,12 +220,12 @@ def move_focus_by_arrow(event, row, col):
     if 0 <= next_row < ROWS and 0 <= next_col < COLS:
         grid[next_row][next_col].focus_set()
 
-def intersection(setA, setB):
-    return setA.intersection(setB)
-
 def populate_listbox():
-    for solution in sorted(list(span))[::-1]:
-        listbox.insert(tk.END, solution + " SPAN")
+    # for solution in sorted(list(span))[::-1]:
+    #     listbox.insert(tk.END, solution + " SPAN")
+
+    for solution in sorted(list(res))[::-1]:
+        listbox.insert(tk.END, solution)
 
 def handle_selection(event):
     selected_index = listbox.curselection()
