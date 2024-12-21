@@ -1,7 +1,8 @@
 import pickle 
 import tkinter as tk
 from tkinter import messagebox
-
+from threading import Thread
+import random
 class TrieNode():
     def __init__(self):
         self.children = {}
@@ -121,7 +122,7 @@ def solve():
             if not letter:
                 messagebox.showerror("Input Error")
             else:
-                row.append(letter.upper())
+                row.append(letter.upper())        
         board.append(row)
     
     for i in range(len(board)):
@@ -129,42 +130,7 @@ def solve():
             start = (i, j)
             dfs(i,j,loaded_trie,"", board, start)
 
-    populate_listbox()
-    # find_solution_combinations(res, answers, span)
-
-def intersection(setA, setB):
-    return setA.intersection(setB)
-
-boardSolutions = []
-
-def boardSolver(usedSpaces, index, currentSolution, res, answers):
-    if len(currentSolution) == 48:
-        boardSolutions.append(currentSolution.copy())
-        return
-    
-    res_list = list(res)  # Convert res to a list once before the loop
-    for i in range(index + 1, len(res_list)):
-        word = res_list[i]
-        if not usedSpaces & answers[word] and len(usedSpaces) + len(answers[word]) <= 48:  # Efficient intersection check
-            # Choose
-            new_usedSpaces = usedSpaces | answers[word]
-            currentSolution.append(word)
-            
-            # Explore
-            boardSolver(new_usedSpaces, i, currentSolution, res, answers)
-            
-            # Undo (backtrack)
-            currentSolution.pop()
-
-def find_solution_combinations(res, answers, span):
-    solutions = {}
-    for spangram in span:
-        originalLength = len(boardSolutions)
-        boardSolver(answers[spangram], 0, [], res, answers)
-        if len(boardSolutions) != originalLength:
-            solutions[spangram] = boardSolutions[-1]
-
-    print(solutions.keys())
+    populate_listbox(list(span))
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
@@ -220,11 +186,28 @@ def move_focus_by_arrow(event, row, col):
     if 0 <= next_row < ROWS and 0 <= next_col < COLS:
         grid[next_row][next_col].focus_set()
 
-def populate_listbox():
-    # for solution in sorted(list(span))[::-1]:
-    #     listbox.insert(tk.END, solution + " SPAN")
+usedSpaces = set()
+def filter(currentList, selection):
+    filtered = []
+    global usedSpaces
+    usedSpaces = usedSpaces | answers[selection]
+    for word in currentList:
+        if not usedSpaces.intersection(answers[word]):
+            filtered.append(word)
+    return filtered
 
-    for solution in sorted(list(res))[::-1]:
+def reset():
+    populate_listbox(span)
+    global usedColors
+    usedColors = set()
+    for i in range(8):
+        for j in range(6):
+            grid[i][j].config(bg="white")
+
+def populate_listbox(toShow):
+    global listbox
+    listbox.delete(0,'end')
+    for solution in sorted(toShow[::-1]):
         listbox.insert(tk.END, solution)
 
 def handle_selection(event):
@@ -232,16 +215,26 @@ def handle_selection(event):
     if selected_index:
         selected_solution = listbox.get(selected_index)
         selected_solution = selected_solution.split(" ")[0]
+        populate_listbox(filter(listbox.get(0,'end'),selected_solution ))
         print(f"Selected solution: {selected_solution}")
         color_solution(selected_solution)
 
+def generate_color():
+    r = lambda: random.randint(0, 255)
+    return f'#{r():02x}{r():02x}{r():02x}'
+
+usedColors = set()
 def color_solution(word):
-    for i in range(8):
-        for j in range(6):
-            grid[i][j].config(bg="white")
+    # for i in range(8):
+    #     for j in range(6):
+    #         grid[i][j].config(bg="white")
+    random_color = generate_color()
+
+    while random_color in usedColors:
+        random_color = generate_color()
 
     for coordinate in answers[word]:
-        grid[coordinate[0]][coordinate[1]].config(bg="green")
+        grid[coordinate[0]][coordinate[1]].config(bg=random_color)
 
 
 main = tk.Tk()
@@ -250,8 +243,11 @@ main.title("Strands Solver")
 tk.Label(main, text="Enter board")
 create_board()
 
-solve1 = tk.Button(main, text='Words', command=solve, font=("Arial", 14))
-solve1.grid(row=ROWS, column=0, columnspan = COLS, pady=10)    
+solve = tk.Button(main, text='Solve', command=solve, font=("Arial", 14))
+solve.grid(row=ROWS, column=0, columnspan = COLS, pady=10)   
+
+reset = tk.Button(main, text = 'Reset', command = reset, font = ("Arial", 14)) 
+reset.grid(row = ROWS, column=3, columnspan = COLS, pady=10)
 
 listbox = tk.Listbox(main, height=15, width=20)
 listbox.grid(row=0, column=COLS + 1, rowspan=ROWS, padx=10, pady=5, sticky="n")
