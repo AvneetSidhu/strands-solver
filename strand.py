@@ -85,7 +85,7 @@ def dfs(r, c, node, word, board, start, first_word_found = False):
                 dfs(x,y, loaded_trie, word, board, start, first_word_found)
             
             first_word_found = False
-            
+
         if(span_left_to_right(path) or span_top_to_bottom(path)):
             span.add(word)
         else:
@@ -128,7 +128,7 @@ def solve():
         for j in range(len(board[0])):
             start = (i, j)
             dfs(i,j,loaded_trie,"", board, start)
-    print(res)
+
     populate_listbox()
     # find_solution_combinations(res, answers, span)
 
@@ -163,8 +163,8 @@ def find_solution_combinations(res, answers, span):
         boardSolver(answers[spangram], 0, [], res, answers)
         if len(boardSolutions) != originalLength:
             solutions[spangram] = boardSolutions[-1]
-    print(res)
-    print(solutions)
+
+    print(solutions.keys())
 
 def move_focus(event, row, col):
     if len(event.widget.get()) == 1:
