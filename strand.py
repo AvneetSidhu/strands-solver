@@ -35,7 +35,7 @@ class App:
         self.ROWS = 8 
         self.COLS = 6
         self.grid = [[None for _ in range(self.COLS)] for _ in range(self.ROWS)]
-        self.firstPick = True
+        self.displayWords = []
 
     def span_left_to_right(self,path):
         start = False
@@ -125,7 +125,8 @@ class App:
             for j in range(len(board[0])):
                 start = (i, j)
                 self.dfs(i,j,loaded_trie,"", board, start)
-        self.populate_listbox(list(self.span))
+        self.displayWords = list(self.answers.keys())
+        self.populate_listbox()
 
     def move_focus(self,event, row, col):
         if len(event.widget.get()) == 1:
@@ -181,16 +182,9 @@ class App:
         if 0 <= next_row < self.ROWS and 0 <= next_col < self.COLS:
             self.grid[next_row][next_col].focus_set()
 
-    def filter(self,currentList, selection):
-        filtered = []
-        self.usedSpaces = self.usedSpaces | self.answers[selection]
-        for word in currentList:
-            if not self.usedSpaces.intersection(self.answers[word]):
-                filtered.append(word)
-        return filtered
-
     def reset(self):
-        self.populate_listbox(list(self.span))
+        self.displayWords = list(self.answers.keys())
+        self.populate_listbox()
         self.usedColors = set()
         self.usedSpaces = set()
         self.firstPick = True
@@ -198,9 +192,17 @@ class App:
             for j in range(6):
                 self.grid[i][j].config(bg="white")
 
-    def populate_listbox(self, toShow):
+    def filter(self, selection):
+        filtered = []
+        self.usedSpaces = self.usedSpaces | self.answers[selection]
+        for word in self.displayWords:
+            if not self.usedSpaces.intersection(self.answers[word]):
+                filtered.append(word)
+        self.displayWords = filtered
+
+    def populate_listbox(self):
         listbox.delete(0,'end')
-        for solution in sorted(toShow[::-1]):
+        for solution in sorted(self.displayWords[::-1]):
             listbox.insert(tk.END, solution)
 
     def handle_selection(self,event):
@@ -211,9 +213,17 @@ class App:
         if selected_index:
             selected_solution = listbox.get(selected_index)
             selected_solution = selected_solution.split(" ")[0]
-            self.populate_listbox(self.filter(listbox.get(0, 'end'),selected_solution))
+            self.filter(selected_solution)
+            self.populate_listbox()
             print(f"Selected solution: {selected_solution}")
             self.color_solution(selected_solution)
+        
+    def search_listbox(self):
+        search_query = search_var.get().lower()
+        filtered_items = [item for item in self.displayWords if search_query in item.lower()]
+        listbox.delete(0, tk.END)
+        for item in filtered_items:
+            listbox.insert(tk.END, item)
 
     def generate_color(self):
         r = lambda: random.randint(0, 255)
@@ -245,6 +255,12 @@ search = tk.Text()
 
 listbox = tk.Listbox(main, height=15, width=20)
 listbox.grid(row=0, column=app.COLS + 1, rowspan=app.ROWS, padx=10, pady=5, sticky="n")
+search_var = tk.StringVar()
+search_var.trace_add("write", lambda *args: app.search_listbox())  # Update Listbox on search
+
+# Create and place the search textbox
+search_entry = tk.Entry(main, textvariable=search_var)
+search_entry.grid(row=7, column=6, columnspan=2, pady=5)
 
 scrollbar = tk.Scrollbar(main, orient=tk.VERTICAL, command=listbox.yview)
 scrollbar.grid(row=0, column=app.COLS + 2, rowspan=app.ROWS, sticky="ns")
