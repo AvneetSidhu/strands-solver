@@ -8,4 +8,4 @@ Strands wordsearch game solver made using python and TKinter for GUI
 
 Uses DFS and backtracking to find all words and potential solutions using found words
 
-Allows user to search for words and see if they are on the board and if so their positions
+Helps with solving the Strands game by providing a list with all words on the board and their positions
