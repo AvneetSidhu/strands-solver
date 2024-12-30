@@ -10,4 +10,4 @@ Uses DFS and backtracking to find all words and potential solutions using found 
 
 Helps with solving the Strands game by providing a list with all words on the board and their positions
 
-To use: download and run strand.py
+To use: download and run strand.py while having the filtered.txt in the same directory or any word list that you would like to search for on the board.
